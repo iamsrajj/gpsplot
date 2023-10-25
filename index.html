@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GPS Tracker | PruSys</title>
+
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="GPS Tracker is a project by PruSys." />
+    <meta name="author" content="Sraj" />
+
+    <link rel="shortcut icon" href="gpsfavicon.ico" type="image/x-icon" />
+
+    <link href="https://js.radar.com/v4.1.11/radar.css" rel="stylesheet" />
+
+    <script src="https://js.radar.com/v4.1.11/radar.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  </head>
+
+  <body>
+    <div id="map" style="width: 100%; height: 500px"></div>
+    <div id="speed-info" style="width: 30%; float: right">
+      <h3>Speed</h3>
+      <p id="speed">Loading...</p>
+    </div>
+
+    <script type="text/javascript">
+      Radar.initialize("prj_live_pk_c911d4bea7f54f6e42031fb7c713ceb733ac5b86");
+
+      const map = Radar.ui.map({
+        container: "map",
+        style: "radar-default-v1",
+        center: [77.39, 23.21], // NYC
+        zoom: 11,
+      });
+
+      // Function to update the current speed element
+      function updateSpeed(speed) {
+        document.getElementById("speed").textContent = speed + " mph";
+      }
+
+      // AJAX request to fetch data from the backend API
+      fetch("http://103.76.249.121:5000/get_coordinates")
+        .then((response) => response.json())
+        .then((data) => {
+          data.forEach((coordinates, index) => {
+            const [longitude, latitude, speed] = coordinates;
+            if (latitude < -90 || latitude > 90) {
+              console.log(
+                `Invalid co-ordinate value at index ${index}: ${latitude}`
+              );
+            } else {
+              const marker = Radar.ui
+                .marker({ text: `ID ${index + 1}` })
+                .setLngLat([longitude, latitude])
+                .addTo(map);
+
+              // Update the current speed element with the latest speed
+              updateSpeed(speed);
+            }
+          });
+        })
+        .catch((error) => console.error("Error Fetching Data: ", error));
+    </script>
+  </body>
+</html>
